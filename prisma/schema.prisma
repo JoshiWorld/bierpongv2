@@ -16,6 +16,7 @@ model Turnier {
     admin     User          @relation(fields: [adminId], references: [id])
     teams     Team[]
     gruppen   Gruppe[]
+    finals    Final[]
     createdAt DateTime      @default(now())
     updatedAt DateTime      @updatedAt
 }
@@ -29,7 +30,7 @@ enum TurnierStatus {
 
 model Team {
     id         String   @id @default(auto()) @map("_id") @db.ObjectId
-    name       String
+    name       String   @unique
     spieler1Id String   @db.ObjectId
     spieler1   User     @relation(name: "Spieler1", fields: [spieler1Id], references: [id])
     spieler2Id String   @db.ObjectId
@@ -39,6 +40,7 @@ model Team {
     gruppeId   String?  @db.ObjectId
     gruppe     Gruppe?  @relation(fields: [gruppeId], references: [id])
     punkte     Int      @default(0)
+    cups       Int      @default(0) // Verteidigte Becher
     spiele1    Spiel[]  @relation(name: "Team1")
     spiele2    Spiel[]  @relation(name: "Team2")
     createdAt  DateTime @default(now())
@@ -47,10 +49,7 @@ model Team {
 
 model User {
     id            String    @id @default(auto()) @map("_id") @db.ObjectId
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
+    name          String    @unique
     accounts      Account[]
     sessions      Session[]
     teamsSpieler1 Team[]    @relation("Spieler1")
@@ -105,16 +104,28 @@ model Gruppe {
     updatedAt DateTime @updatedAt
 }
 
+model Final {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    name      String
+    turnierId String   @db.ObjectId
+    turnier   Turnier  @relation(fields: [turnierId], references: [id])
+    spiele    Spiel[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
 model Spiel {
-    id          String   @id @default(auto()) @map("_id") @db.ObjectId
-    gruppeId    String   @db.ObjectId
-    gruppe      Gruppe   @relation(fields: [gruppeId], references: [id])
-    team1Id     String   @db.ObjectId
-    team1       Team     @relation(name: "Team1", fields: [team1Id], references: [id])
-    team2Id     String   @db.ObjectId
-    team2       Team     @relation(name: "Team2", fields: [team2Id], references: [id])
-    punkteTeam1 Int?
-    punkteTeam2 Int?
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    gruppeId  String?  @db.ObjectId
+    gruppe    Gruppe?  @relation(fields: [gruppeId], references: [id])
+    finalId   String?  @db.ObjectId
+    final     Final?   @relation(fields: [finalId], references: [id])
+    team1Id   String   @db.ObjectId
+    team1     Team     @relation(name: "Team1", fields: [team1Id], references: [id])
+    team2Id   String   @db.ObjectId
+    team2     Team     @relation(name: "Team2", fields: [team2Id], references: [id])
+    cupsTeam1 Int?
+    cupsTeam2 Int?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
