@@ -50,11 +50,17 @@ model Team {
 model User {
     id            String    @id @default(auto()) @map("_id") @db.ObjectId
     name          String    @unique
+    role          UserRole  @default(MEMBER)
     accounts      Account[]
     sessions      Session[]
     teamsSpieler1 Team[]    @relation("Spieler1")
     teamsSpieler2 Team[]    @relation("Spieler2")
     turniere      Turnier[]
+}
+
+enum UserRole {
+    MEMBER
+    ADMIN
 }
 
 model Account {
