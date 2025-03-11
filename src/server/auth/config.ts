@@ -1,56 +1,76 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { type DefaultSession, type NextAuthConfig } from "next-auth";
-// import DiscordProvider from "next-auth/providers/discord";
-
+import { type NextAuthConfig } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "@/server/db";
+import { env } from "@/env";
+import { verifyOtp } from "./otp";
 
-/**
- * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
- * object and keep type safety.
- *
- * @see https://next-auth.js.org/getting-started/typescript#module-augmentation
- */
-declare module "next-auth" {
-  interface Session extends DefaultSession {
-    user: {
-      id: string;
-      // ...other properties
-      // role: UserRole;
-    } & DefaultSession["user"];
-  }
-
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
-}
-
-/**
- * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
- *
- * @see https://next-auth.js.org/configuration/options
- */
 export const authConfig = {
+  debug: true,
   providers: [
-    // DiscordProvider,
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
-  ],
-  adapter: PrismaAdapter(db),
-  callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        username: {
+          label: "Spielername",
+          type: "text",
+          placeholder: "Spielername",
+        },
+        otp: { label: "Login-Code", type: "text" },
+      },
+      async authorize(credentials) {
+        console.log("Credentials:", credentials);
+        if (!credentials) return null;
+        const { username, otp } = credentials;
+
+        try {
+          const user = await db.user.findUnique({
+            where: {
+              name: String(username),
+            },
+            select: {
+              id: true,
+              name: true,
+            },
+          });
+
+          if (!user) {
+            console.log("User not found");
+            return null; // User nicht gefunden
+          }
+
+          const isOtpValid = await verifyOtp(String(username), String(otp));
+          if (!isOtpValid) {
+            console.log("OTP is invalid");
+            return null; // OTP ungültig
+          }
+
+          console.log("User authenticated successfully:", user);
+          return user;
+        } catch (error) {
+          console.error("Error during authorization:", error);
+          return null;
+        }
       },
     }),
+  ],
+  adapter: PrismaAdapter(db),
+  secret: env.AUTH_SECRET,
+  pages: {
+    signOut: "/logout",
+    signIn: "/login",
+    error: "/login",
+    verifyRequest: "/auth/verify",
+  },
+  callbacks: {
+    async session({ session, token }) {
+      if (session?.user) {
+        session.user.id = token.sub!;
+      }
+      return session;
+    },
+  },
+  session: {
+    strategy: "jwt",
   },
 } satisfies NextAuthConfig;
