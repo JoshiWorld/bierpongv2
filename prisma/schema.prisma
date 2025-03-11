@@ -1,74 +1,120 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-    provider = "prisma-client-js"
+    provider      = "prisma-client-js"
+    binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
 datasource db {
-    provider = "postgresql"
-    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-    // Further reading:
-    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
+    provider = "mongodb"
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
+model Turnier {
+    id        String        @id @default(auto()) @map("_id") @db.ObjectId
     name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
+    status    TurnierStatus @default(LOBBY)
+    adminId   String        @db.ObjectId
+    admin     User          @relation(fields: [adminId], references: [id])
+    teams     Team[]
+    gruppen   Gruppe[]
+    createdAt DateTime      @default(now())
+    updatedAt DateTime      @updatedAt
 }
 
-// Necessary for Next auth
-model Account {
-    id                       String  @id @default(cuid())
-    userId                   String
-    type                     String
-    provider                 String
-    providerAccountId        String
-    refresh_token            String? // @db.Text
-    access_token             String? // @db.Text
-    expires_at               Int?
-    token_type               String?
-    scope                    String?
-    id_token                 String? // @db.Text
-    session_state            String?
-    user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    refresh_token_expires_in Int?
-
-    @@unique([provider, providerAccountId])
+enum TurnierStatus {
+    LOBBY
+    GRUPPENPHASE
+    KO_PHASE
+    ABGESCHLOSSEN
 }
 
-model Session {
-    id           String   @id @default(cuid())
-    sessionToken String   @unique
-    userId       String
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Team {
+    id         String   @id @default(auto()) @map("_id") @db.ObjectId
+    name       String
+    spieler1Id String   @db.ObjectId
+    spieler1   User     @relation(name: "Spieler1", fields: [spieler1Id], references: [id])
+    spieler2Id String   @db.ObjectId
+    spieler2   User     @relation(name: "Spieler2", fields: [spieler2Id], references: [id])
+    turnierId  String   @db.ObjectId
+    turnier    Turnier  @relation(fields: [turnierId], references: [id])
+    gruppeId   String?  @db.ObjectId
+    gruppe     Gruppe?  @relation(fields: [gruppeId], references: [id])
+    punkte     Int      @default(0)
+    spiele1    Spiel[]  @relation(name: "Team1")
+    spiele2    Spiel[]  @relation(name: "Team2")
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
 }
 
 model User {
-    id            String    @id @default(cuid())
+    id            String    @id @default(auto()) @map("_id") @db.ObjectId
     name          String?
     email         String?   @unique
     emailVerified DateTime?
     image         String?
     accounts      Account[]
     sessions      Session[]
-    posts         Post[]
+    teamsSpieler1 Team[]    @relation("Spieler1")
+    teamsSpieler2 Team[]    @relation("Spieler2")
+    turniere      Turnier[]
+}
+
+model Account {
+    id                String  @id @default(auto()) @map("_id") @db.ObjectId
+    userId            String  @db.ObjectId
+    type              String
+    provider          String
+    providerAccountId String
+    refresh_token     String? @db.String
+    access_token      String? @db.String
+    expires_at        Int?
+    token_type        String?
+    scope             String?
+    id_token          String? @db.String
+    session_state     String?
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id           String   @id @default(auto()) @map("_id") @db.ObjectId
+    sessionToken String   @unique
+    userId       String   @db.ObjectId
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
+    id         String   @id @default(auto()) @map("_id") @db.ObjectId
     identifier String
     token      String   @unique
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model Gruppe {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    name      String
+    turnierId String   @db.ObjectId
+    turnier   Turnier  @relation(fields: [turnierId], references: [id])
+    teams     Team[]
+    spiele    Spiel[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Spiel {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    gruppeId    String   @db.ObjectId
+    gruppe      Gruppe   @relation(fields: [gruppeId], references: [id])
+    team1Id     String   @db.ObjectId
+    team1       Team     @relation(name: "Team1", fields: [team1Id], references: [id])
+    team2Id     String   @db.ObjectId
+    team2       Team     @relation(name: "Team2", fields: [team2Id], references: [id])
+    punkteTeam1 Int?
+    punkteTeam2 Int?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
 }
