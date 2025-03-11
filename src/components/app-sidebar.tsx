@@ -2,9 +2,9 @@
 
 import * as React from "react"
 import {
+  Beer,
   BookOpen,
   Bot,
-  Command,
   Frame,
   LifeBuoy,
   Map,
@@ -27,6 +27,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { api } from "@/trpc/react"
+import { LoadingSkeleton } from "./loading"
 
 const data = {
   user: {
@@ -153,6 +155,10 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: user, isLoading } = api.user.get.useQuery();
+
+  if(isLoading || !user) return <LoadingSkeleton />;
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -161,11 +167,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg" asChild>
               <a href="#">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Command className="size-4" />
+                  <Beer className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Acme Inc</span>
-                  <span className="truncate text-xs">Enterprise</span>
+                  <span className="truncate font-semibold">Bierpong</span>
+                  <span className="truncate text-xs">Turnier</span>
                 </div>
               </a>
             </SidebarMenuButton>
@@ -178,7 +184,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )
