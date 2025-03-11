@@ -1,12 +1,20 @@
-import { AppSidebar } from "@/components/app-sidebar";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { auth } from "@/server/auth";
-import { Separator } from "@radix-ui/react-separator";
+import { AppSidebar } from "@/components/app-sidebar"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
 
-export default async function Home() {
-  const session = await auth();
-
+export default function Page() {
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -40,5 +48,5 @@ export default async function Home() {
         </div>
       </SidebarInset>
     </SidebarProvider>
-  );
+  )
 }
