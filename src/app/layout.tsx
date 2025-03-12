@@ -7,6 +7,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { TRPCReactProvider } from "@/trpc/react";
 import { HydrateClient } from "@/trpc/server";
 
+import { Toaster } from "@/components/ui/sonner";
+
 export const metadata: Metadata = {
   title: "Bierpong Turniersystem",
   description: "Entwickelt von Joshua Stieber",
@@ -32,6 +34,7 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               <main>{children}</main>
+              <Toaster richColors />
             </ThemeProvider>
           </HydrateClient>
         </TRPCReactProvider>

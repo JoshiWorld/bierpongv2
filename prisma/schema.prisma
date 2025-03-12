@@ -11,7 +11,9 @@ datasource db {
 model Turnier {
     id        String        @id @default(auto()) @map("_id") @db.ObjectId
     name      String
+    code      String        @unique
     status    TurnierStatus @default(LOBBY)
+    size      TurnierSize   @default(EXTREME)
     adminId   String        @db.ObjectId
     admin     User          @relation(fields: [adminId], references: [id])
     teams     Team[]
@@ -28,9 +30,16 @@ enum TurnierStatus {
     ABGESCHLOSSEN
 }
 
+enum TurnierSize {
+    SMALL // 4 Teams
+    MEDIUM // 8 Teams
+    BIG // 16 Teams
+    EXTREME // 32 Teams
+}
+
 model Team {
     id         String   @id @default(auto()) @map("_id") @db.ObjectId
-    name       String   @unique
+    name       String
     spieler1Id String   @db.ObjectId
     spieler1   User     @relation(name: "Spieler1", fields: [spieler1Id], references: [id])
     spieler2Id String   @db.ObjectId
@@ -132,6 +141,7 @@ model Spiel {
     team2     Team     @relation(name: "Team2", fields: [team2Id], references: [id])
     cupsTeam1 Int?
     cupsTeam2 Int?
+    done      Boolean  @default(false)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }

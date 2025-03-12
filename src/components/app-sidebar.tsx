@@ -1,23 +1,12 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import {
-  Beer,
-  BookOpen,
-  Bot,
-  Frame,
-  LifeBuoy,
-  Map,
-  PieChart,
-  Send,
-  Settings2,
-  SquareTerminal,
-} from "lucide-react"
+import * as React from "react";
+import { ArrowBigRight, Beer, LifeBuoy, Send, Trophy } from "lucide-react";
 
-import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from "@/components/nav-main";
+import { NavProjects } from "@/components/nav-projects";
+// import { NavSecondary } from "@/components/nav-secondary";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -26,98 +15,35 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { api } from "@/trpc/react"
-import { LoadingSkeleton } from "./loading"
+} from "@/components/ui/sidebar";
+import { api } from "@/trpc/react";
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navMain: [
     {
-      title: "Playground",
+      title: "Test Turnier",
       url: "#",
-      icon: SquareTerminal,
+      icon: Trophy,
       isActive: true,
       items: [
         {
-          title: "History",
+          title: "Übersicht",
           url: "#",
         },
         {
-          title: "Starred",
+          title: "Gruppen",
           url: "#",
         },
         {
-          title: "Settings",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
+          title: "Teams",
           url: "#",
         },
         {
-          title: "Explorer",
+          title: "Spieler",
           url: "#",
         },
         {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
+          title: "Einstellungen",
           url: "#",
         },
       ],
@@ -137,27 +63,21 @@ const data = {
   ],
   projects: [
     {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
+      name: "Turnier beitreten",
+      url: "/dashboard/tournament/join",
+      icon: ArrowBigRight,
     },
     {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
+      name: "Turnier erstellen",
+      url: "/dashboard/tournament/create",
+      icon: Trophy,
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: user, isLoading } = api.user.get.useQuery();
-
-  if(isLoading || !user) return <LoadingSkeleton />;
+  const { data: user, isLoading: isLoadingUser } = api.user.get.useQuery();
+  const { data: tournaments, isLoading: isLoadingTournaments } = api.user.joinedTournaments.useQuery();
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -166,7 +86,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <a href="#">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-sidebar-primary-foreground">
                   <Beer className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
@@ -179,13 +99,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        {isLoadingTournaments ? (
+          <div className="aspect-video h-12 w-full animate-pulse rounded-xl bg-muted/50" />
+        ) : (
+          <NavMain items={tournaments} user={user} />
+        )}
         <NavProjects projects={data.projects} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        {isLoadingUser || !user ? (
+          <div className="aspect-video h-12 w-full animate-pulse rounded-xl bg-muted/50" />
+        ) : (
+          <NavUser user={user} />
+        )}
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
