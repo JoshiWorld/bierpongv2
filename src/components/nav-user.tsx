@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   Bell,
   ChevronsUpDown,
+  LayoutDashboard,
   // CreditCard,
   LogOut,
   Sparkles,
@@ -30,6 +31,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { UserRole } from "@prisma/client"
+import { useRouter } from "next/navigation"
 
 export function NavUser({
   user,
@@ -40,7 +43,8 @@ export function NavUser({
     role: string
   }
 }) {
-  const { isMobile } = useSidebar()
+  const router = useRouter();
+  const { isMobile } = useSidebar();
 
   return (
     <SidebarMenu>
@@ -53,7 +57,9 @@ export function NavUser({
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 {/* <AvatarImage src={user.avatar} alt={user.name} /> */}
-                <AvatarFallback className="rounded-lg"><User /></AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  <User />
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{user.name}</span>
@@ -72,7 +78,9 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   {/* <AvatarImage src={user.avatar} alt={user.name} /> */}
-                  <AvatarFallback className="rounded-lg"><User /></AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    <User />
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{user.name}</span>
@@ -93,10 +101,12 @@ export function NavUser({
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>
-              {/* <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem> */}
+              {user.role === UserRole.ADMIN && (
+                <DropdownMenuItem onClick={() => router.push('/dashboard/admin')}>
+                  <LayoutDashboard />
+                  Admin-Dashboard
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem>
                 <Bell />
                 Benachrichtigungen
@@ -111,5 +121,5 @@ export function NavUser({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

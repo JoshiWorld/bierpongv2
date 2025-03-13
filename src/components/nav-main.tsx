@@ -115,7 +115,7 @@ export function NavMain({ items, user }: { items: Tournament[] | undefined; user
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Beigetretene Turniere</SidebarGroupLabel>
-      {!items ? (
+      {!items || items.length === 0 ? (
         <p>Du bist noch keinem Turnier beigetreten</p>
       ) : (
         <SidebarMenu>

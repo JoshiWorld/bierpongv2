@@ -1,6 +1,8 @@
 "use client"
 
 import {
+  ChevronRight,
+  Settings,
   type LucideIcon,
 } from "lucide-react"
 
@@ -8,9 +10,15 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible"
+import { api } from "@/trpc/react"
 
 export function NavProjects({
   projects,
@@ -21,7 +29,7 @@ export function NavProjects({
     icon: LucideIcon
   }[]
 }) {
-  // const { isMobile } = useSidebar()
+  const { data: tournaments } = api.tournament.getAdminTournaments.useQuery();
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -35,42 +43,42 @@ export function NavProjects({
                 <span>{item.name}</span>
               </a>
             </SidebarMenuButton>
-            {/* <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuAction showOnHover>
-                  <MoreHorizontal />
-                  <span className="sr-only">Mehr</span>
-                </SidebarMenuAction>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-48"
-                side={isMobile ? "bottom" : "right"}
-                align={isMobile ? "end" : "start"}
-              >
-                <DropdownMenuItem>
-                  <Folder className="text-muted-foreground" />
-                  <span>View Project</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Share className="text-muted-foreground" />
-                  <span>Share Project</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Trash2 className="text-muted-foreground" />
-                  <span>Delete Project</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu> */}
           </SidebarMenuItem>
         ))}
-        {/* <SidebarMenuItem>
-          <SidebarMenuButton>
-            <MoreHorizontal />
-            <span>More</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem> */}
+        {tournaments && (
+          <Collapsible asChild defaultOpen>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Deine Turniere">
+                <p>
+                  <Settings />
+                  <span>Deine Turniere</span>
+                </p>
+              </SidebarMenuButton>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuAction className="data-[state=open]:rotate-90">
+                  <ChevronRight />
+                  <span className="sr-only">Toggle</span>
+                </SidebarMenuAction>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                {tournaments.map((tournament) => (
+                  <SidebarMenuSub key={tournament.id}>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild>
+                        <a
+                          href={`/dashboard/tournament/settings?id=${tournament.id}`}
+                        >
+                          <span>{tournament.name}</span>
+                        </a>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                ))}
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+        )}
       </SidebarMenu>
     </SidebarGroup>
-  )
+  );
 }

@@ -20,11 +20,14 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+// import { useRouter } from "next/navigation";
+// import { toast } from "sonner";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  // const router = useRouter();
   const [name, setName] = useState<string>("");
   const [otp, setOtp] = useState<string>("");
 
@@ -32,12 +35,22 @@ export function LoginForm({
     e.preventDefault();
 
     const result = await signIn("credentials", {
-      redirect: false,
+      redirect: true,
       username: name,
       otp,
+      redirectTo: '/dashboard'
     });
 
     console.log('RESULT:', result);
+
+    // if(result?.ok) {
+    //   router.push('/dashboard');
+    // } else {
+    //   console.error(result);
+    //   toast.error("Es gab einen Fehler beim Anmelden.", {
+    //     description: result?.error ?? result?.code ?? "Unbekannter Fehler"
+    //   });
+    // }
   }
 
   return (

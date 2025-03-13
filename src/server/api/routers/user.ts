@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "@/server/api/trpc";
+import { adminProcedure, createTRPCRouter, protectedProcedure, publicProcedure } from "@/server/api/trpc";
 import { generateOtp } from "@/server/auth/otp";
 import { TRPCError } from "@trpc/server";
 import { Prisma } from "@prisma/client";
@@ -45,6 +45,15 @@ export const userRouter = createTRPCRouter({
         });
       }
     }),
+
+  getAll: adminProcedure.query(({ ctx }) => {
+    return ctx.db.user.findMany({
+      select: {
+        id: true,
+        name: true,
+      }
+    });
+  }),
 
   get: protectedProcedure.query(({ ctx }) => {
     return ctx.db.user.findUnique({
@@ -112,6 +121,14 @@ export const userRouter = createTRPCRouter({
             id: true,
           }
         }
+      }
+    });
+  }),
+
+  delete: adminProcedure.input(z.object({ id: z.string() })).mutation(({ ctx, input }) => {
+    return ctx.db.user.delete({
+      where: {
+        id: input.id
       }
     });
   })

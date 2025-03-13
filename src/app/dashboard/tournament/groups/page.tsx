@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TournamentSkeleton } from "@/components/tournament-skeleton";
 
 type Tournament = {
   code: string;
@@ -73,7 +74,7 @@ export default function TournamentGroupsPage() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <GroupsHeader tournament={tournament} />
-      <div className="grid auto-rows-min gap-4 md:grid-cols-4">
+      <div className="w-full">
         <GroupsTable tournamentId={tournament.id} />
         {/* <div>
           <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
@@ -84,19 +85,6 @@ export default function TournamentGroupsPage() {
           </div>
         </div> */}
       </div>
-    </div>
-  );
-}
-
-function TournamentSkeleton() {
-  return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="aspect-video animate-pulse rounded-xl bg-muted/50" />
-        <div className="aspect-video animate-pulse rounded-xl bg-muted/50" />
-        <div className="aspect-video animate-pulse rounded-xl bg-muted/50" />
-      </div>
-      <div className="min-h-[100vh] flex-1 animate-pulse rounded-xl bg-muted/50 md:min-h-min" />
     </div>
   );
 }
@@ -121,10 +109,10 @@ function GroupsTable({ tournamentId }: { tournamentId: string }) {
     return <p>Es wurden noch keine Gruppen ausgelost.</p>;
 
   return (
-    <div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
       {groups.map((group, idx) => (
         <div key={`${group.name}_${idx}`}>
-          <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+          <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight py-2">
             {group.name}
           </h3>
           <div className="aspect-video rounded-xl bg-muted/50">

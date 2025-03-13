@@ -26,12 +26,13 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 type Player = {
-    id: string;
-    name: string;
-}
+  id: string;
+  name: string;
+};
 
 export default function DashboardPage() {
   const router = useRouter();
+  const utils = api.useUtils();
 
   const [code, setCode] = useState<string>("");
   const [teamname, setTeamname] = useState<string>("");
@@ -40,28 +41,30 @@ export default function DashboardPage() {
   const [availablePlayers, setAvailablePlayers] = useState<Player[]>([]);
 
   const { data: user } = api.user.get.useQuery();
-  const { data: players, isLoading: isLoadingPlayers } = api.user.getAvailablePlayers.useQuery({ code });
+  const { data: players, isLoading: isLoadingPlayers } =
+    api.user.getAvailablePlayers.useQuery({ code }, { enabled: !!code });
   const joinTournament = api.tournament.join.useMutation({
-    onSuccess: (res) => {
-        router.push(`/dashboard/tournament/overview?id=${res.turnierId}`);
-        toast.success(`Dein Team "${teamname}" ist dem Turnier beigetreten`);
+    onSuccess: async (res) => {
+      await utils.tournament.invalidate();
+      router.push(`/dashboard/tournament/overview?id=${res.turnierId}`);
+      toast.success(`Dein Team "${teamname}" ist dem Turnier beigetreten`);
     },
     onError: (err) => {
-        console.error(err.shape?.message);
-        toast.error("Da ist wohl etwas schiefgelaufen", {
-            description: err.shape?.message ?? "Unbekannter Fehler",
-        });
-    }
+      console.error(err.shape?.message);
+      toast.error("Da ist wohl etwas schiefgelaufen", {
+        description: err.shape?.message ?? "Unbekannter Fehler",
+      });
+    },
   });
 
   useEffect(() => {
     setAvailablePlayers(players ?? []);
-    if(user) {
-        if (players?.find((player) => player.id === user?.id)) {
-          setPlayer1(user.id);
-        } else {
-            setPlayer1("");
-        }
+    if (user) {
+      if (players?.find((player) => player.id === user?.id)) {
+        setPlayer1(user.id);
+      } else {
+        setPlayer1("");
+      }
     }
   }, [user, code, players]);
 
@@ -123,42 +126,68 @@ export default function DashboardPage() {
                   required
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="player1">Spieler 1</Label>
-                <Select value={player1} onValueChange={setPlayer1}>
-                  <SelectTrigger id="player1">
-                    <SelectValue placeholder={isLoadingPlayers ? "Spieler werden geladen.." : "Spieler 1 auswählen"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Verfügbare Spieler</SelectLabel>
-                      {availablePlayers.filter((player) => player.id !== player2).map((player, idx) => (
-                        <SelectItem key={`player1_${idx}`} value={player.id}>
-                          {player.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="player2">Spieler 2</Label>
-                <Select value={player2} onValueChange={setPlayer2}>
-                  <SelectTrigger id="player2">
-                    <SelectValue placeholder={isLoadingPlayers ? "Spieler werden geladen.." : "Spieler 2 auswählen"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Verfügbare Spieler</SelectLabel>
-                      {availablePlayers.filter((player) => player.id !== player1).map((player, idx) => (
-                        <SelectItem key={`player2_${idx}`} value={player.id}>
-                          {player.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
+              {code && (
+                <div className="flex flex-col gap-6">
+                  <div className="grid gap-2">
+                    <Label htmlFor="player1">Spieler 1</Label>
+                    <Select value={player1} onValueChange={setPlayer1}>
+                      <SelectTrigger id="player1">
+                        <SelectValue
+                          placeholder={
+                            isLoadingPlayers
+                              ? "Spieler werden geladen.."
+                              : "Spieler 1 auswählen"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Verfügbare Spieler</SelectLabel>
+                          {availablePlayers
+                            .filter((player) => player.id !== player2)
+                            .map((player, idx) => (
+                              <SelectItem
+                                key={`player1_${idx}`}
+                                value={player.id}
+                              >
+                                {player.name}
+                              </SelectItem>
+                            ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="player2">Spieler 2</Label>
+                    <Select value={player2} onValueChange={setPlayer2}>
+                      <SelectTrigger id="player2">
+                        <SelectValue
+                          placeholder={
+                            isLoadingPlayers
+                              ? "Spieler werden geladen.."
+                              : "Spieler 2 auswählen"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Verfügbare Spieler</SelectLabel>
+                          {availablePlayers
+                            .filter((player) => player.id !== player1)
+                            .map((player, idx) => (
+                              <SelectItem
+                                key={`player2_${idx}`}
+                                value={player.id}
+                              >
+                                {player.name}
+                              </SelectItem>
+                            ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
               <Button
                 type="submit"
                 className="w-full"
