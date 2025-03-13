@@ -37,6 +37,7 @@ type TeamViewOverview = {
   name: string;
   punkte: number;
   cups: number;
+  id: string;
 };
 
 export default function TournamentGroupsPage() {
@@ -104,18 +105,23 @@ function GroupsTable({ tournamentId }: { tournamentId: string }) {
   const { data: groups } = api.tournament.getGroups.useQuery({
     id: tournamentId,
   });
+  const { data: currentTeam } = api.user.getCurrentTeam.useQuery({
+    tournamentId
+  });
 
   if (!groups || groups.length === 0)
     return <p>Es wurden noch keine Gruppen ausgelost.</p>;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
       {groups.map((group, idx) => (
         <div key={`${group.name}_${idx}`}>
-          <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight py-2">
+          <h3 className="scroll-m-20 py-2 text-2xl font-semibold tracking-tight">
             {group.name}
           </h3>
-          <div className="aspect-video rounded-xl bg-muted/50">
+          <div
+            className={`aspect-video rounded-xl ${group.teams.some((team) => team.id === currentTeam?.id) ? "bg-green-900" : "bg-muted/50"}`}
+          >
             <GroupCard group={group} />
           </div>
         </div>

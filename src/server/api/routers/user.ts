@@ -68,6 +68,28 @@ export const userRouter = createTRPCRouter({
     });
   }),
 
+  getCurrentTeam: protectedProcedure.input(z.object({ tournamentId: z.string() })).query(({ ctx, input }) => {
+    return ctx.db.team.findFirst({
+      where: {
+        turnier: {
+          id: input.tournamentId,
+        },
+        OR: [
+          {
+            spieler1Id: ctx.session.user.id,
+          },
+          {
+            spieler2Id: ctx.session.user.id,
+          },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+      }
+    });
+  }),
+
   getAvailablePlayers: protectedProcedure.input(z.object({ code: z.string() })).query(({ ctx, input }) => {
     return ctx.db.user.findMany({
       where: {

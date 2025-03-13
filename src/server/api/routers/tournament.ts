@@ -15,6 +15,7 @@ type GroupViewOverview = {
 };
 
 type TeamViewOverview = {
+  id: string;
   name: string;
   punkte: number;
   cups: number;
@@ -198,6 +199,7 @@ export const tournamentRouter = createTRPCRouter({
                   name: true,
                   punkte: true,
                   cups: true,
+                  id: true,
                 },
               },
             },
@@ -221,6 +223,7 @@ export const tournamentRouter = createTRPCRouter({
             name: team.name,
             punkte: team.punkte,
             cups: team.cups,
+            id: team.id
           });
         });
 
