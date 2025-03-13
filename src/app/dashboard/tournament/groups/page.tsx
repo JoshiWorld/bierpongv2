@@ -122,7 +122,7 @@ function GroupsTable({ tournamentId }: { tournamentId: string }) {
           <div
             className={`aspect-video rounded-xl ${group.teams.some((team) => team.id === currentTeam?.id) ? "bg-green-900" : "bg-muted/50"}`}
           >
-            <GroupCard group={group} />
+            <GroupCard group={group} teamId={currentTeam?.id} />
           </div>
         </div>
       ))}
@@ -130,7 +130,7 @@ function GroupsTable({ tournamentId }: { tournamentId: string }) {
   );
 }
 
-function GroupCard({ group }: { group: GroupViewOverview }) {
+function GroupCard({ group, teamId }: { group: GroupViewOverview; teamId: string | undefined }) {
     return (
       <Table>
         <TableHeader>
@@ -143,7 +143,11 @@ function GroupCard({ group }: { group: GroupViewOverview }) {
         <TableBody>
           {group.teams.map((team, idx) => (
             <TableRow key={`${team.name}_${idx}`}>
-              <TableCell className="font-medium">{team.name}</TableCell>
+              <TableCell
+                className={team.id === teamId ? "font-bold" : "font-medium"}
+              >
+                {team.name}
+              </TableCell>
               <TableCell>{team.punkte}</TableCell>
               <TableCell>{team.cups}</TableCell>
             </TableRow>
