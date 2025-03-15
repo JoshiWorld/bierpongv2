@@ -61,12 +61,8 @@ const tournamentItems = [
     url: "/dashboard/tournament/groups",
   },
   {
-    title: "Teams",
-    url: "/dashboard/tournament/teams",
-  },
-  {
-    title: "Spieler",
-    url: "/dashboard/tournament/players",
+    title: "Spiele",
+    url: "/dashboard/tournament/games",
   },
 ];
 
@@ -80,12 +76,8 @@ const tournamentItemsAdmin = [
     url: "/dashboard/tournament/groups",
   },
   {
-    title: "Teams",
-    url: "/dashboard/tournament/teams",
-  },
-  {
-    title: "Spieler",
-    url: "/dashboard/tournament/players",
+    title: "Spiele",
+    url: "/dashboard/tournament/games",
   },
   {
     title: "Einstellungen",

@@ -19,6 +19,7 @@ type TeamViewOverview = {
   name: string;
   punkte: number;
   cups: number;
+  enemyCups: number;
 };
 
 type MatchViewOverview = {
@@ -200,6 +201,7 @@ export const tournamentRouter = createTRPCRouter({
                   punkte: true,
                   cups: true,
                   id: true,
+                  enemyCups: true,
                 },
               },
             },
@@ -216,22 +218,30 @@ export const tournamentRouter = createTRPCRouter({
 
       const groups: GroupViewOverview[] = [];
 
-      tournament.gruppen.forEach((group) => {
+      for(const group of tournament.gruppen) {
         const teams: TeamViewOverview[] = [];
-        group.teams.forEach((team) => {
+        for(const team of group.teams) {
           teams.push({
             name: team.name,
             punkte: team.punkte,
             cups: team.cups,
-            id: team.id
+            enemyCups: team.enemyCups,
+            id: team.id,
           });
+        }
+
+        teams.sort((a, b) => {
+          if (b.punkte !== a.punkte) {
+            return b.punkte - a.punkte; // Absteigend nach Punkten
+          }
+          return (b.cups - b.enemyCups) - (a.cups - a.enemyCups); // Absteigend nach Cups
         });
 
         groups.push({
           name: group.name,
           teams,
         });
-      });
+      }
 
       return groups;
     }),
@@ -552,9 +562,9 @@ export const tournamentRouter = createTRPCRouter({
         },
       });
 
-      const groups = createRandomGroups(teams);
-
       try {
+        const groups = createRandomGroups(teams);
+
         for (let i = 0; i < groups.length; i++) {
           const groupName = `Gruppe ${String.fromCharCode(65 + i)}`;
           const teamIds = groups[i];
@@ -579,21 +589,6 @@ export const tournamentRouter = createTRPCRouter({
               id: true,
             },
           });
-
-          // for (const teamId of teamIds) {
-          //   await ctx.db.team.update({
-          //     where: {
-          //       id: teamId,
-          //     },
-          //     data: {
-          //       gruppe: {
-          //         connect: {
-          //           id: newGroup.id,
-          //         },
-          //       },
-          //     },
-          //   });
-          // }
 
           await ctx.db.team.updateMany({
             where: {
@@ -628,6 +623,83 @@ export const tournamentRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `Fehler beim erstellen der Gruppen`,
+          cause: err,
+        });
+      }
+
+      try {
+        const groups = await ctx.db.gruppe.findMany({
+          where: {
+            turnier: {
+              id: tournament.id
+            }
+          },
+          select: {
+            id: true,
+            teams: {
+              select: {
+                id: true,
+              }
+            }
+          }
+        });
+
+        const matchOrder = [
+          [0, 1], // Team1 vs Team2
+          [2, 3], // Team3 vs Team4
+          [0, 2], // Team1 vs Team3
+          [1, 3], // Team2 vs Team4
+          [0, 3], // Team1 vs Team4
+          [1, 2], // Team2 vs Team3
+        ];
+
+        for (const group of groups) {
+          const teams = group.teams;
+
+          // Stelle sicher, dass es genau 4 Teams gibt, bevor wir versuchen, Spiele zu erstellen.
+          if (teams.length !== 4) {
+            console.warn(
+              `Gruppe ${group.id} hat nicht die erwartete Anzahl von Teams (4). Überspringe Match-Erstellung.`,
+            );
+            continue; // Gehe zur nächsten Gruppe über
+          }
+
+          // Matches erstellen in der definierten Reihenfolge
+          for (const [team1Index, team2Index] of matchOrder) {
+            // @ts-expect-error || @ts-ignore
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+            const team1Id = teams[team1Index].id;
+            // @ts-expect-error || @ts-ignore
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+            const team2Id = teams[team2Index].id;
+
+            await ctx.db.spiel.create({
+              data: {
+                team1: {
+                  connect: {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    id: team1Id,
+                  },
+                },
+                team2: {
+                  connect: {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    id: team2Id,
+                  },
+                },
+                gruppe: {
+                  connect: {
+                    id: group.id,
+                  },
+                },
+              },
+            });
+          }
+        }
+      } catch (err) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Fehler beim erstellen der Spiele`,
           cause: err,
         });
       }
@@ -705,6 +777,9 @@ export const tournamentRouter = createTRPCRouter({
         },
         data: {
           gruppeId: null,
+          cups: 0,
+          punkte: 0,
+          enemyCups: 0
         },
       });
       await ctx.db.gruppe.deleteMany({

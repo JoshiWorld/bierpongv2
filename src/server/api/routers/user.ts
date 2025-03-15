@@ -90,6 +90,110 @@ export const userRouter = createTRPCRouter({
     });
   }),
 
+  getCurrentMatch: protectedProcedure.input(z.object({ tournamentId: z.string() })).query(async ({ ctx, input }) => {
+    const userId = ctx.session.user.id;
+
+    const tournament = await ctx.db.turnier.findUnique({
+      where: {
+        id: input.tournamentId,
+      },
+      select: {
+        gruppen: {
+          where: {
+            teams: {
+              some: {
+                OR: [
+                  { spieler1: { id: userId } },
+                  { spieler2: { id: userId } },
+                ],
+              },
+            },
+          },
+          select: {
+            name: true,
+            spiele: {
+              where: {
+                done: false,
+                // OR: [
+                //   {
+                //     team1: {
+                //       OR: [
+                //         { spieler1: { id: userId } },
+                //         { spieler2: { id: userId } },
+                //       ],
+                //     },
+                //   },
+                //   {
+                //     team2: {
+                //       OR: [
+                //         { spieler1: { id: userId } },
+                //         { spieler2: { id: userId } },
+                //       ],
+                //     },
+                //   },
+                // ]
+              },
+              take: 1,
+              select: {
+                id: true,
+                team1: {
+                  select: {
+                    spieler1: {
+                      select: {
+                        id: true
+                      }
+                    },
+                    spieler2: {
+                      select: {
+                        id: true
+                      }
+                    },
+                    name: true,
+                    id: true,
+                  },
+                },
+                team2: {
+                  select: {
+                    spieler1: {
+                      select: {
+                        id: true
+                      }
+                    },
+                    spieler2: {
+                      select: {
+                        id: true
+                      }
+                    },
+                    name: true,
+                    id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if(!tournament) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Das angegebene Turnier konnte nicht gefunden werden",
+      });
+    }
+
+    if (
+      tournament.gruppen[0]?.spiele[0]?.team1.spieler1.id === userId ||
+      tournament.gruppen[0]?.spiele[0]?.team1.spieler2.id === userId ||
+      tournament.gruppen[0]?.spiele[0]?.team2.spieler1.id === userId ||
+      tournament.gruppen[0]?.spiele[0]?.team2.spieler2.id === userId 
+    ) {
+      return tournament.gruppen[0]?.spiele[0];
+    }
+
+    return null;
+  }),
+
   getAvailablePlayers: protectedProcedure.input(z.object({ code: z.string() })).query(({ ctx, input }) => {
     return ctx.db.user.findMany({
       where: {

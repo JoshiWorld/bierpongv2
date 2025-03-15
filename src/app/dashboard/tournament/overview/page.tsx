@@ -106,7 +106,7 @@ export default function TournamentOverviewPage() {
       <TournamentHeader tournament={tournament} />
       <div className="grid auto-rows-min gap-4 md:grid-cols-3">
         <div>
-          <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+          <h3 className="scroll-m-20 py-2 text-2xl font-semibold tracking-tight">
             Spieler
           </h3>
           <div className="aspect-video overflow-auto rounded-xl bg-muted/50">
@@ -115,7 +115,7 @@ export default function TournamentOverviewPage() {
         </div>
 
         <div>
-          <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+          <h3 className="scroll-m-20 py-2 text-2xl font-semibold tracking-tight">
             Gruppen
           </h3>
           <div className="aspect-video overflow-auto rounded-xl bg-muted/50">
@@ -124,7 +124,7 @@ export default function TournamentOverviewPage() {
         </div>
 
         <div>
-          <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+          <h3 className="scroll-m-20 py-2 text-2xl font-semibold tracking-tight">
             Aktuelle Spiele
           </h3>
           <div className="aspect-video overflow-auto rounded-xl bg-muted/50">
@@ -136,7 +136,7 @@ export default function TournamentOverviewPage() {
           </div>
         </div>
       </div>
-      <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min overflow-auto">
+      <div className="min-h-[100vh] flex-1 overflow-auto rounded-xl bg-muted/50 md:min-h-min">
         <TournamentMatchesView tournamentId={tournament.id} />
       </div>
     </div>

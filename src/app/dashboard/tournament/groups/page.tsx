@@ -38,6 +38,7 @@ type TeamViewOverview = {
   punkte: number;
   cups: number;
   id: string;
+  enemyCups: number;
 };
 
 export default function TournamentGroupsPage() {
@@ -149,7 +150,7 @@ function GroupCard({ group, teamId }: { group: GroupViewOverview; teamId: string
                 {team.name}
               </TableCell>
               <TableCell>{team.punkte}</TableCell>
-              <TableCell>{team.cups}</TableCell>
+              <TableCell>{`${team.cups}:${team.enemyCups}`}</TableCell>
             </TableRow>
           ))}
         </TableBody>

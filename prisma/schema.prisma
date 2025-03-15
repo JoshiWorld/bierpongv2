@@ -38,22 +38,25 @@ enum TurnierSize {
 }
 
 model Team {
-    id         String   @id @default(auto()) @map("_id") @db.ObjectId
-    name       String
-    spieler1Id String   @db.ObjectId
-    spieler1   User     @relation(name: "Spieler1", fields: [spieler1Id], references: [id])
-    spieler2Id String   @db.ObjectId
-    spieler2   User     @relation(name: "Spieler2", fields: [spieler2Id], references: [id])
-    turnierId  String   @db.ObjectId
-    turnier    Turnier  @relation(fields: [turnierId], references: [id])
-    gruppeId   String?  @db.ObjectId
-    gruppe     Gruppe?  @relation(fields: [gruppeId], references: [id])
-    punkte     Int      @default(0)
-    cups       Int      @default(0) // Verteidigte Becher
-    spiele1    Spiel[]  @relation(name: "Team1")
-    spiele2    Spiel[]  @relation(name: "Team2")
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
+    id              String          @id @default(auto()) @map("_id") @db.ObjectId
+    name            String
+    spieler1Id      String          @db.ObjectId
+    spieler1        User            @relation(name: "Spieler1", fields: [spieler1Id], references: [id])
+    spieler2Id      String          @db.ObjectId
+    spieler2        User            @relation(name: "Spieler2", fields: [spieler2Id], references: [id])
+    turnierId       String          @db.ObjectId
+    turnier         Turnier         @relation(fields: [turnierId], references: [id])
+    gruppeId        String?         @db.ObjectId
+    gruppe          Gruppe?         @relation(fields: [gruppeId], references: [id])
+    punkte          Int             @default(0)
+    cups            Int             @default(0) // Verteidigte Becher
+    enemyCups       Int             @default(0) // Gefallene Becher
+    spiele1         Spiel[]         @relation(name: "Team1")
+    spiele2         Spiel[]         @relation(name: "Team2")
+    ergebnisse      Spielergebnis[] @relation(name: "Winner")
+    ergebnisCreator Spielergebnis[] @relation(name: "Creator")
+    createdAt       DateTime        @default(now())
+    updatedAt       DateTime        @updatedAt
 }
 
 model User {
@@ -130,18 +133,33 @@ model Final {
 }
 
 model Spiel {
-    id        String   @id @default(auto()) @map("_id") @db.ObjectId
-    gruppeId  String?  @db.ObjectId
-    gruppe    Gruppe?  @relation(fields: [gruppeId], references: [id])
-    finalId   String?  @db.ObjectId
-    final     Final?   @relation(fields: [finalId], references: [id])
-    team1Id   String   @db.ObjectId
-    team1     Team     @relation(name: "Team1", fields: [team1Id], references: [id])
-    team2Id   String   @db.ObjectId
-    team2     Team     @relation(name: "Team2", fields: [team2Id], references: [id])
-    cupsTeam1 Int?
-    cupsTeam2 Int?
-    done      Boolean  @default(false)
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    id         String          @id @default(auto()) @map("_id") @db.ObjectId
+    gruppeId   String?         @db.ObjectId
+    gruppe     Gruppe?         @relation(fields: [gruppeId], references: [id], onDelete: Cascade)
+    finalId    String?         @db.ObjectId
+    final      Final?          @relation(fields: [finalId], references: [id])
+    team1Id    String          @db.ObjectId
+    team1      Team            @relation(name: "Team1", fields: [team1Id], references: [id])
+    team2Id    String          @db.ObjectId
+    team2      Team            @relation(name: "Team2", fields: [team2Id], references: [id])
+    cupsTeam1  Int?
+    cupsTeam2  Int?
+    ergebnisse Spielergebnis[]
+    done       Boolean         @default(false)
+    createdAt  DateTime        @default(now())
+    updatedAt  DateTime        @updatedAt
+}
+
+model Spielergebnis {
+    id        String @id @default(auto()) @map("_id") @db.ObjectId
+    spielId   String @db.ObjectId
+    spiel     Spiel  @relation(fields: [spielId], references: [id], onDelete: Cascade)
+    team1Cups Int
+    team2Cups Int
+    winnerId  String @db.ObjectId
+    winner    Team   @relation(name: "Winner", fields: [winnerId], references: [id], onDelete: Cascade)
+    creatorId String @db.ObjectId
+    creator   Team   @relation(name: "Creator", fields: [creatorId], references: [id], onDelete: Cascade)
+
+    @@index([spielId])
 }
