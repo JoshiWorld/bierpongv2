@@ -230,7 +230,9 @@ function MatchInputs({
     const team2Cups =
       match.team2.id === team.id ? ownCupsNumber : enemyCupsNumber;
 
-    submitResult.mutate({ winnerId: winner, team1Cups, team2Cups, matchId: match.id, team1Id: match.team1.id, creatorId: team.id, tournamentId });
+    const loserId = winner === match.team1.id ? match.team2.id : match.team1.id;
+
+    submitResult.mutate({ winnerId: winner, loserId, team1Cups, team2Cups, matchId: match.id, team1Id: match.team1.id, creatorId: team.id, tournamentId });
   }
 
   return (
@@ -324,9 +326,13 @@ function MatchInputsFinals({
   const utils = api.useUtils();
   const enemyTeam = match.team1.id === team.id ? match.team2 : match.team1;
 
+  const { data: finalMatchesRunning } =
+    api.finals.finalMatchesRunning.useQuery({ tournamentId });
+
   const [winner, setWinner] = useState<string>("");
   const [waitingForEnemy, setWaitingForEnemy] = useState<boolean>(false);
 
+  const createNewFinals = api.finals.createNewFinalMatch.useMutation();
   const submitResult = api.match.enterResultFinals.useMutation({
     onSuccess: async (res) => {
       await utils.invalidate();
@@ -339,6 +345,10 @@ function MatchInputsFinals({
         toast.success(
           "Das Ergebnis wurde erfolgreich abgeglichen. Das Spiel wurde vollständig gewertet.",
         );
+      }
+
+      if(finalMatchesRunning === 0) {
+        createNewFinals.mutate({ tournamentId });
       }
     },
     onError: async (err) => {

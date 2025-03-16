@@ -11,13 +11,14 @@ export const matchRouter = createTRPCRouter({
         team1Cups: z.number(),
         team2Cups: z.number(),
         winnerId: z.string(),
+        loserId: z.string(),
         team1Id: z.string(),
         creatorId: z.string(),
         tournamentId: z.string(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { matchId, team1Cups, team2Cups, winnerId, team1Id, creatorId } =
+      const { matchId, team1Cups, team2Cups, winnerId, loserId, team1Id, creatorId } =
         input;
 
       const result = await ctx.db.spielergebnis.findFirst({
@@ -131,6 +132,17 @@ export const matchRouter = createTRPCRouter({
               increment: 3,
             },
           },
+        });
+
+        await ctx.db.team.update({
+          where: {
+            id: loserId
+          },
+          data: {
+            enemyCups: {
+              increment: cups
+            }
+          }
         });
 
         console.log("TeamUpdate:", teamUpdate);
