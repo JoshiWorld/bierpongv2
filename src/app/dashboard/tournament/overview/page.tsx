@@ -14,7 +14,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TournamentSkeleton } from "@/components/tournament-skeleton";
-import { TournamentMatchesView } from "@/components/tournament-matches-view";
 
 type Tournament = {
   code: string;
@@ -136,9 +135,9 @@ export default function TournamentOverviewPage() {
           </div>
         </div>
       </div>
-      <div className="min-h-[100vh] flex-1 overflow-auto rounded-xl bg-muted/50 md:min-h-min">
+      {/* <div className="min-h-[100vh] flex-1 overflow-auto rounded-xl bg-muted/50 md:min-h-min">
         <TournamentMatchesView tournamentId={tournament.id} />
-      </div>
+      </div> */}
     </div>
   );
 }

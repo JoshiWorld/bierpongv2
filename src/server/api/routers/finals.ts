@@ -34,6 +34,13 @@ export const finalsRouter = createTRPCRouter({
         });
       }
 
+      if (tournament.status !== TurnierStatus.GRUPPENPHASE) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Das Turnier befindet sich nicht in der Gruppenphase`,
+        });
+      }
+
       const groups = await ctx.db.gruppe.findMany({
         where: {
           turnier: {

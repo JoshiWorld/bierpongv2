@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api } from "@/trpc/react";
+import { TurnierStatus } from "@prisma/client";
 import { Check, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -57,7 +58,11 @@ export default function GamesOverviewPage() {
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <GamesHeader />
       <div className="w-full">
-        <CurrentMatch tournamentId={tournament.id} />
+        {tournament.status === TurnierStatus.GRUPPENPHASE ? (
+          <CurrentMatchGroup tournamentId={tournament.id} />
+        ) : (
+          <CurrentMatchFinal tournamentId={tournament.id} />
+        )}
       </div>
     </div>
   );
@@ -102,9 +107,9 @@ type CurrentTeam = {
   id: string;
 };
 
-function CurrentMatch({ tournamentId }: { tournamentId: string }) {
+function CurrentMatchGroup({ tournamentId }: { tournamentId: string }) {
   const { data: currentMatch, isLoading: isLoadingCurrentMatch } =
-    api.user.getCurrentMatch.useQuery({ tournamentId });
+    api.user.getCurrentMatchGroup.useQuery({ tournamentId });
   const { data: team, isLoading: isLoadingTeam } =
     api.user.getCurrentTeam.useQuery({ tournamentId });
 
@@ -123,6 +128,41 @@ function CurrentMatch({ tournamentId }: { tournamentId: string }) {
               : currentMatch.team1.name}
           </p>
           <MatchInputs
+            match={currentMatch}
+            team={team}
+            tournamentId={tournamentId}
+          />
+        </div>
+      ) : (
+        <div>Du spielst gerade nicht.</div>
+      )}
+
+      <MatchesTable teamId={team.id} />
+    </div>
+  );
+}
+
+function CurrentMatchFinal({ tournamentId }: { tournamentId: string }) {
+  const { data: currentMatch, isLoading: isLoadingCurrentMatch } =
+    api.user.getCurrentMatchFinal.useQuery({ tournamentId });
+  const { data: team, isLoading: isLoadingTeam } =
+    api.user.getCurrentTeam.useQuery({ tournamentId });
+
+  if (isLoadingCurrentMatch || isLoadingTeam) return <p>Lade Matches..</p>;
+
+  if (!team) return <p>Fehler beim Laden..</p>;
+  
+  return (
+    <div>
+      {currentMatch ? (
+        <div className="flex flex-col items-center justify-center gap-5">
+          <p>
+            Dein Gegner:{" "}
+            {team.id === currentMatch.team1.id
+              ? currentMatch.team2.name
+              : currentMatch.team1.name}
+          </p>
+          <MatchInputsFinals
             match={currentMatch}
             team={team}
             tournamentId={tournamentId}
@@ -262,6 +302,114 @@ function MatchInputs({
             </div>
             <DialogFooter>
               <Button type="submit" onClick={handleSendMatchResults} disabled={submitResult.isPending}>
+                {submitResult.isPending ? "Wird eingetragen.." : "Eintragen"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
+
+function MatchInputsFinals({
+  match,
+  team,
+  tournamentId,
+}: {
+  match: MatchStats;
+  team: CurrentTeam;
+  tournamentId: string;
+}) {
+  const utils = api.useUtils();
+  const enemyTeam = match.team1.id === team.id ? match.team2 : match.team1;
+
+  const [winner, setWinner] = useState<string>("");
+  const [waitingForEnemy, setWaitingForEnemy] = useState<boolean>(false);
+
+  const submitResult = api.match.enterResultFinals.useMutation({
+    onSuccess: async (res) => {
+      await utils.invalidate();
+      if (res.created) {
+        toast.info(
+          "Das Ergebnis wurde eingetragen. Es muss noch durch deinen Gegner bestätigt werden.",
+        );
+        setWaitingForEnemy(true);
+      } else {
+        toast.success(
+          "Das Ergebnis wurde erfolgreich abgeglichen. Das Spiel wurde vollständig gewertet.",
+        );
+      }
+    },
+    onError: async (err) => {
+      await utils.invalidate();
+      toast.error("Es gab einen Fehler beim Eintragen des Ergebnis.", {
+        description:
+          err.shape?.message ?? err.shape?.code ?? "Unbekannter Fehler",
+      });
+    },
+  });
+
+  const handleSendMatchResults = () => {
+    if (!winner) {
+      toast.error("Du musst einen Gewinner eintragen.");
+      return;
+    }
+
+    submitResult.mutate({
+      winnerId: winner,
+      matchId: match.id,
+      team1Id: match.team1.id,
+      creatorId: team.id,
+      tournamentId,
+    });
+  };
+
+  return (
+    <div>
+      {waitingForEnemy ? (
+        <div>Warte auf Gegner..</div>
+      ) : (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">Ergebnis eintragen</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Ergebnis eintragen</DialogTitle>
+              <DialogDescription>
+                Trage hier das Ergebnis gegen das Team{" "}
+                <span className="font-bold">{enemyTeam.name}</span> ein
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-1 items-start gap-4">
+                <Label htmlFor="winner" className="text-left">
+                  Wer hat das Spiel gewonnen?
+                </Label>
+                <Select value={winner} onValueChange={setWinner}>
+                  <SelectTrigger id="winner">
+                    <SelectValue placeholder="Gewinnerteam auswählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value={match.team1.id}>
+                        {match.team1.name}
+                      </SelectItem>
+                      <SelectItem value={match.team2.id}>
+                        {match.team2.name}
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="submit"
+                onClick={handleSendMatchResults}
+                disabled={submitResult.isPending}
+              >
                 {submitResult.isPending ? "Wird eingetragen.." : "Eintragen"}
               </Button>
             </DialogFooter>

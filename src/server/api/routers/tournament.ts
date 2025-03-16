@@ -317,7 +317,6 @@ export const tournamentRouter = createTRPCRouter({
                 where: {
                   done: false,
                 },
-                take: 1,
                 select: {
                   team1: {
                     select: {
@@ -346,13 +345,13 @@ export const tournamentRouter = createTRPCRouter({
       const matches: MatchViewOverview[] = [];
 
       tournament.finals.forEach((final) => {
-        if (final.spiele[0]) {
+        final.spiele.forEach((match) => {
           matches.push({
             group: final.name,
-            team1: final.spiele[0].team1,
-            team2: final.spiele[0].team2,
+            team1: match.team1,
+            team2: match.team2,
           });
-        }
+        })
       });
 
       return matches;
