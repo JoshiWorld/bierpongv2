@@ -13,8 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TournamentMatchesView } from "@/components/tournament-matches-view";
 import { TournamentSkeleton } from "@/components/tournament-skeleton";
+import { TournamentMatchesView } from "@/components/tournament-matches-view";
 
 type Tournament = {
   code: string;
@@ -204,7 +204,6 @@ function GroupsTable({ tournamentId }: { tournamentId: string }) {
             {group.name}
           </h4>
           <Table>
-            {/* <TableCaption>{`Anzahl der Gruppen: ${groups.length}`}</TableCaption> */}
             <TableHeader>
               <TableRow>
                 <TableHead>Team</TableHead>

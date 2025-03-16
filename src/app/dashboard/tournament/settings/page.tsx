@@ -103,13 +103,16 @@ export default function TournamentSettingsPage() {
         <TeamsDialog tournament={tournament} />
       </div>
       <StartButton status={tournament.status} tournamentId={tournament.id} />
-      <ResetButton tournamentId={tournament.id} />
+      <ResetDialog tournamentId={tournament.id} />
     </div>
   );
 }
 
 function StartButton({ status, tournamentId }: { status: TurnierStatus; tournamentId: string }) {
   const utils = api.useUtils();
+  const router = useRouter();
+
+  const { data: groupRunningMatches } = api.match.groupRunningMatches.useQuery({ tournamentId }, { enabled: status === TurnierStatus.GRUPPENPHASE });
 
   const startTournament = api.tournament.startTournament.useMutation({
     onSuccess: async (res) => {
@@ -135,12 +138,53 @@ function StartButton({ status, tournamentId }: { status: TurnierStatus; tourname
     case TurnierStatus.ABGESCHLOSSEN:
       return <Button>Turnier archivieren</Button>;
     case TurnierStatus.GRUPPENPHASE:
-      return <Button>Finals starten</Button>;
+      if(groupRunningMatches === 0) {
+        return (
+          <Button onClick={() => router.push(`/dashboard/tournament/setgroupwinner?id=${tournamentId}`)}>
+            Gruppensieger festlegen
+          </Button>
+        );
+      } else {
+        return (
+          <Button disabled>
+            Gruppensieger festlegen
+          </Button>
+        );
+      }
     case TurnierStatus.KO_PHASE:
       return <Button>Turnier beenden</Button>;
     default:
       return <Button>Turnier starten</Button>;
   }
+}
+
+function ResetDialog({
+  tournamentId,
+}: {
+  tournamentId: string;
+}) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="destructive">Turnier zurücksetzen</Button>
+      </DialogTrigger>
+      <DialogContent className="h-screen overflow-auto sm:max-w-md md:h-1/2">
+        <DialogHeader>
+          <DialogTitle>Willst du wirklich das Turnier zurücksetzen?</DialogTitle>
+        </DialogHeader>
+        <div className="flex items-center justify-center">
+          <ResetButton tournamentId={tournamentId} />
+        </div>
+        <DialogFooter className="sm:justify-start">
+          <DialogClose asChild>
+            <Button type="button" variant="secondary">
+              Abbrechen
+            </Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function ResetButton({

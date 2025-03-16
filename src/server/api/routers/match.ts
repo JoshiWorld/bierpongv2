@@ -174,5 +174,18 @@ export const matchRouter = createTRPCRouter({
           }
         }
       });
-    })
+    }),
+
+  groupRunningMatches: protectedProcedure.input(z.object({ tournamentId: z.string() })).query(({ ctx, input }) => {
+    return ctx.db.spiel.count({
+      where: {
+        gruppe: {
+          turnier: {
+            id: input.tournamentId
+          }
+        },
+        done: false
+      }
+    });
+  })
 });

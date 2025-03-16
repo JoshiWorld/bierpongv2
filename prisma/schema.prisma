@@ -45,7 +45,7 @@ model Team {
     spieler2Id      String          @db.ObjectId
     spieler2        User            @relation(name: "Spieler2", fields: [spieler2Id], references: [id])
     turnierId       String          @db.ObjectId
-    turnier         Turnier         @relation(fields: [turnierId], references: [id])
+    turnier         Turnier         @relation(fields: [turnierId], references: [id], onDelete: Cascade)
     gruppeId        String?         @db.ObjectId
     gruppe          Gruppe?         @relation(fields: [gruppeId], references: [id])
     punkte          Int             @default(0)
@@ -115,7 +115,7 @@ model Gruppe {
     id        String   @id @default(auto()) @map("_id") @db.ObjectId
     name      String
     turnierId String   @db.ObjectId
-    turnier   Turnier  @relation(fields: [turnierId], references: [id])
+    turnier   Turnier  @relation(fields: [turnierId], references: [id], onDelete: Cascade)
     teams     Team[]
     spiele    Spiel[]
     createdAt DateTime @default(now())
@@ -126,7 +126,7 @@ model Final {
     id        String   @id @default(auto()) @map("_id") @db.ObjectId
     name      String
     turnierId String   @db.ObjectId
-    turnier   Turnier  @relation(fields: [turnierId], references: [id])
+    turnier   Turnier  @relation(fields: [turnierId], references: [id], onDelete: Cascade)
     spiele    Spiel[]
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
