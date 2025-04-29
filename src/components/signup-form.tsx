@@ -90,7 +90,7 @@ export function SignupForm({
                     <span className="text-green-500">Code kopiert!</span>
                   )}
                 </div>
-                <Button type="submit" className="w-full">
+                <Button className="w-full">
                   <Link href="/login">Zum Login</Link>
                 </Button>
               </div>
@@ -127,6 +127,12 @@ export function SignupForm({
                 >
                   {createUser.isPending ? "Wird erstellt.." : "Erstellen"}
                 </Button>
+              </div>
+              <div className="mt-4 text-center text-sm">
+                Oder einloggen:{" "}
+                <a href="/login" className="underline underline-offset-4">
+                  Login
+                </a>
               </div>
             </form>
           </CardContent>
