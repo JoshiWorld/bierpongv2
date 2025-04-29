@@ -116,8 +116,8 @@ export default function DashboardPage() {
                   required
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="name">Teamname</Label>
+              <div className={`grid gap-2 ${teamname.length > 20 ? "text-red-500" : ""}`}>
+                <Label htmlFor="name">Teamname {teamname.length > 20 ? "(max. 20 Zeichen)" : ""}</Label>
                 <Input
                   id="name"
                   type="text"
