@@ -36,13 +36,13 @@ export const authConfig = {
 
           if (!user) {
             console.log("User not found");
-            return null; // User nicht gefunden
+            return null;
           }
 
           const isOtpValid = await verifyOtp(String(username), String(otp));
           if (!isOtpValid) {
             console.log("OTP is invalid");
-            return null; // OTP ungültig
+            return null;
           }
 
           console.log("User authenticated successfully:", user);
