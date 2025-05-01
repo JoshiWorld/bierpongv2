@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { subscribeToPushNotifications } from "@/utils/push-subscription";
+// import { subscribeToPushNotifications } from "@/utils/push-subscription";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
@@ -36,7 +36,7 @@ export function SubscribeButton() {
 
   const handleClick = async () => {
     try {
-      const subscription = await subscribeToPushNotifications();
+      // const subscription = await subscribeToPushNotifications();
 
       if(!subscription) {
         toast.error("Fehler bei PushAPI", {
@@ -46,7 +46,7 @@ export function SubscribeButton() {
       }
 
       // Sende das Abonnement an deinen Server
-      await sendSubscriptionToServer(subscription);
+      // await sendSubscriptionToServer(subscription);
     } catch (error) {
       console.error("Error subscribing to push notifications:", error);
       if (error instanceof Error) {

@@ -1,7 +1,5 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-
 interface Match {
   id: string;
   team1: string;
@@ -185,6 +183,7 @@ const roundOf16 = [
 ];
 
 export function TournamentMatchesView({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   tournamentId,
 }: TournamentMatchesViewProps) {
   return (

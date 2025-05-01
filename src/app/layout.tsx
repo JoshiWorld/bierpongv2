@@ -8,7 +8,8 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { HydrateClient } from "@/trpc/server";
 
 import { Toaster } from "@/components/ui/sonner";
-import { PushNotifications } from "@/components/push-notification";
+import { FCMToken } from "@/components/fcm-token";
+// import { PushNotifications } from "@/components/push-notification";
 
 export const metadata: Metadata = {
   title: "Bierpong Turniersystem",
@@ -27,7 +28,8 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        <PushNotifications />
+        {/* <PushNotifications /> */}
+        {/* <FCMToken /> */}
         <TRPCReactProvider>
           <HydrateClient>
             <ThemeProvider
@@ -36,6 +38,7 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
+              <FCMToken />
               <main>{children}</main>
               <Toaster richColors />
             </ThemeProvider>

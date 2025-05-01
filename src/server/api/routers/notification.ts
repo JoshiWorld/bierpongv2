@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-import { adminProcedure, createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { adminProcedure, createTRPCRouter, protectedProcedure, publicProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import { pushNotificationUtils } from "@/utils/push-notification-utils";
 import webpush from "web-push";
 
 const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -28,9 +29,15 @@ const pushSubscriptionSchema = z.object({
   expirationTime: z.number().nullable().optional(),
 });
 
+// const pushNotificationPayloadSchema = z.object({
+//   title: z.string(),
+//   message: z.string(),
+// });
+
 const pushNotificationPayloadSchema = z.object({
   title: z.string(),
   message: z.string(),
+  // fcmToken: z.string(),
 });
 
 export const notificationRouter = createTRPCRouter({
@@ -63,36 +70,82 @@ export const notificationRouter = createTRPCRouter({
         });
       }
     }),
-  send: adminProcedure
-    .input(pushNotificationPayloadSchema)
+
+  saveToken: publicProcedure.input(z.object({token: z.string()})).mutation(({ input, ctx }) => {
+    return ctx.db.firebaseToken.create({
+      data: {
+        token: input.token
+      }
+    })
+  }),
+  // send: adminProcedure
+  //   .input(pushNotificationPayloadSchema)
+  //   .mutation(async ({ input, ctx }) => {
+  //     try {
+  //       console.log("Sending push notification with payload:", input);
+
+  //       const subscriptions = await ctx.db.pushSubscription.findMany();
+
+  //       if (!subscriptions || subscriptions.length === 0) {
+  //         throw new TRPCError({
+  //           code: "NOT_FOUND",
+  //           message: "No subscriptions found",
+  //         });
+  //       }
+
+  //       // Sende die Push-Benachrichtigung an alle Abonnenten
+  //       await Promise.all(
+  //         subscriptions.map((subscription) => {
+  //           return webpush.sendNotification(
+  //             {
+  //               endpoint: subscription.endpoint,
+  //               keys: {
+  //                 p256dh: subscription.p256dh,
+  //                 auth: subscription.auth,
+  //               },
+  //             },
+  //             JSON.stringify(input), // Payload (title, message)
+  //           );
+  //         }),
+  //       );
+
+  //       return { message: "Push notifications sent" };
+  //     } catch (error) {
+  //       console.error("Error sending push notifications:", error);
+  //       throw new TRPCError({
+  //         code: "INTERNAL_SERVER_ERROR",
+  //         message: "Failed to send push notifications",
+  //       });
+  //     }
+  //   }),
+
+  send: adminProcedure // Nur Admins dürfen Push-Benachrichtigungen senden
+    .input(pushNotificationPayloadSchema) // Verwende das definierte Schema für die Payload
     .mutation(async ({ input, ctx }) => {
       try {
         console.log("Sending push notification with payload:", input);
 
-        const subscriptions = await ctx.db.pushSubscription.findMany();
+        const tokens = await ctx.db.firebaseToken.findMany({
+          select: {
+            token: true,
+          }
+        });
 
-        if (!subscriptions || subscriptions.length === 0) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "No subscriptions found",
-          });
-        }
-
-        // Sende die Push-Benachrichtigung an alle Abonnenten
-        await Promise.all(
-          subscriptions.map((subscription) => {
-            return webpush.sendNotification(
-              {
-                endpoint: subscription.endpoint,
-                keys: {
-                  p256dh: subscription.p256dh,
-                  auth: subscription.auth,
-                },
-              },
-              JSON.stringify(input), // Payload (title, message)
+        for (const token of tokens) {
+          try {
+            await pushNotificationUtils.sendPushNotification(
+              token.token,
+              input.title,
+              input.message,
             );
-          }),
-        );
+          } catch (error) {
+            console.error(
+              "Error sending push notification to token:",
+              token,
+              error,
+            );
+          }
+        }
 
         return { message: "Push notifications sent" };
       } catch (error) {
@@ -110,7 +163,7 @@ export const notificationRouter = createTRPCRouter({
     const subscription = await ctx.db.pushSubscription.findFirst({
       where: {
         user: {
-          id: ctx.session.user.id
+          id: ctx.session.user.id,
         },
         // Überprüfe, ob expirationTime grösser als der aktuelle Timestamp ist oder null ist
         OR: [
@@ -125,4 +178,6 @@ export const notificationRouter = createTRPCRouter({
 
     return !!subscription;
   }),
+
+  
 });
