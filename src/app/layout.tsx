@@ -8,11 +8,13 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { HydrateClient } from "@/trpc/server";
 
 import { Toaster } from "@/components/ui/sonner";
+import { PushNotifications } from "@/components/push-notification";
 
 export const metadata: Metadata = {
   title: "Bierpong Turniersystem",
   description: "Entwickelt von Joshua Stieber",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -25,6 +27,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
+        <PushNotifications />
         <TRPCReactProvider>
           <HydrateClient>
             <ThemeProvider
