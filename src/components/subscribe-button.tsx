@@ -38,6 +38,13 @@ export function SubscribeButton() {
     try {
       const subscription = await subscribeToPushNotifications();
 
+      if(!subscription) {
+        toast.error("Fehler bei PushAPI", {
+          description: "Subscription is undefined"
+        });
+        throw new Error("PushAPI Error");
+      }
+
       // Sende das Abonnement an deinen Server
       await sendSubscriptionToServer(subscription);
     } catch (error) {
@@ -50,26 +57,24 @@ export function SubscribeButton() {
     }
   };
 
-  async function sendSubscriptionToServer(subscription: PushSubscription) {
+  type Sub = {
+    endpoint: string;
+    keys: {
+      auth: string;
+      p256dh: string;
+    },
+    expirationTime: number | null | undefined,
+  }
+
+  async function sendSubscriptionToServer(subscription: Sub) {
     subscribeMutation.mutate({
       endpoint: subscription.endpoint,
       keys: {
-        auth: arrayBufferToBase64(subscription.getKey("auth")),
-        p256dh: arrayBufferToBase64(subscription.getKey("p256dh")),
+        auth: subscription.keys.auth,
+        p256dh: subscription.keys.p256dh,
       },
       expirationTime: subscription.expirationTime,
     });
-  }
-
-  function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
-    let binary = "";
-    const bytes = new Uint8Array(buffer!);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      // @ts-expect-error || @ts-ignore
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
   }
 
   if (isLoading) {

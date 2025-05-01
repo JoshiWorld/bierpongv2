@@ -1,12 +1,11 @@
-// src/utils/push-subscription.ts
 export async function subscribeToPushNotifications() {
   if (!("serviceWorker" in navigator)) {
     throw new Error("Service workers are not supported in this browser");
   }
 
+  // Warte, bis der Service Worker bereit ist
   const registration = await navigator.serviceWorker.ready;
 
-  // VAPID Public Key (muss sicher aus der Umgebungsvariable geladen werden)
   const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
   if (!vapidPublicKey) {
@@ -15,14 +14,43 @@ export async function subscribeToPushNotifications() {
     );
   }
 
-  const subscription = await registration.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-  });
+  try {
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+    });
 
-  console.log("Push subscription created:", subscription);
+    console.log("Push subscription created:", subscription);
 
-  return subscription;
+    // Konvertiere ArrayBuffer zu Strings
+    const authKey = subscription.getKey("auth");
+    const p256dhKey = subscription.getKey("p256dh");
+
+    if (!authKey || !p256dhKey) {
+      throw new Error(
+        "Failed to retrieve auth or p256dh key from subscription",
+      );
+    }
+
+    const auth = arrayBufferToBase64(authKey);
+    const p256dh = arrayBufferToBase64(p256dhKey);
+
+    return {
+      endpoint: subscription.endpoint,
+      expirationTime: subscription.expirationTime,
+      keys: {
+        auth: auth,
+        p256dh: p256dh,
+      },
+    };
+  } catch (error) {
+    console.error("Error subscribing to push notifications:", error);
+    if(error instanceof Error) {
+      throw new Error(
+        "Failed to subscribe to push notifications: " + error.message,
+      );
+    }
+  }
 }
 
 function urlBase64ToUint8Array(base64String: string) {
