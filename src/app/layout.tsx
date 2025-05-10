@@ -38,7 +38,7 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <FCMToken />
+              {/* <FCMToken /> */}
               <main>{children}</main>
               <Toaster richColors />
             </ThemeProvider>

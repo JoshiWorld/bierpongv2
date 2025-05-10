@@ -327,7 +327,7 @@ function MatchInputsFinals({
   const enemyTeam = match.team1.id === team.id ? match.team2 : match.team1;
 
   const { data: finalMatchesRunning } =
-    api.finals.finalMatchesRunning.useQuery({ tournamentId });
+    api.finals.finalMatchesRunning.useQuery({ tournamentId }, { refetchOnReconnect: true, refetchInterval: 3 });
 
   const [winner, setWinner] = useState<string>("");
   const [waitingForEnemy, setWaitingForEnemy] = useState<boolean>(false);

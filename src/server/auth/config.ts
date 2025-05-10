@@ -40,6 +40,7 @@ export const authConfig = {
           }
 
           const isOtpValid = await verifyOtp(String(username), String(otp));
+          // const isOtpValid = true; // DEBUG
           if (!isOtpValid) {
             console.log("OTP is invalid");
             return null;

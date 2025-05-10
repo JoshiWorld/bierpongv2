@@ -103,7 +103,7 @@ export default function TournamentOverviewPage() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <TournamentHeader tournament={tournament} />
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+      <div className="grid auto-rows-min gap-4 md:grid-cols-2">
         <div>
           <h3 className="scroll-m-20 py-2 text-2xl font-semibold tracking-tight">
             Spieler
@@ -122,7 +122,7 @@ export default function TournamentOverviewPage() {
           </div>
         </div>
 
-        <div>
+        {/* <div>
           <h3 className="scroll-m-20 py-2 text-2xl font-semibold tracking-tight">
             Aktuelle Spiele
           </h3>
@@ -133,11 +133,15 @@ export default function TournamentOverviewPage() {
               <CurrentMatchesGroupphase tournamentId={tournament.id} />
             )}
           </div>
-        </div>
+        </div> */}
       </div>
-      {/* <div className="min-h-[100vh] flex-1 overflow-auto rounded-xl bg-muted/50 md:min-h-min">
-        <TournamentMatchesView tournamentId={tournament.id} />
-      </div> */}
+      <div className="min-h-[100vh] flex-1 overflow-auto rounded-xl bg-muted/50 md:min-h-min">
+        {tournament.status === TurnierStatus.KO_PHASE ? (
+          <CurrentMatchesFinalphase tournamentId={tournament.id} />
+        ) : (
+          <CurrentMatchesGroupphase tournamentId={tournament.id} />
+        )}
+      </div>
     </div>
   );
 }
@@ -190,7 +194,7 @@ function PlayersTable({ tournamentId }: { tournamentId: string }) {
 function GroupsTable({ tournamentId }: { tournamentId: string }) {
   const { data: groups } = api.tournament.getGroups.useQuery({
     id: tournamentId,
-  });
+  }, { refetchInterval: 5000 });
 
   if (!groups || groups.length === 0)
     return <p>Es wurden noch keine Gruppen ausgelost.</p>;
@@ -231,6 +235,9 @@ function CurrentMatchesGroupphase({ tournamentId }: { tournamentId: string }) {
     {
       id: tournamentId,
     },
+    {
+      refetchInterval: 5000,
+    }
   );
 
   if (!matches || matches.length === 0)
@@ -262,6 +269,9 @@ function CurrentMatchesFinalphase({ tournamentId }: { tournamentId: string }) {
     {
       id: tournamentId,
     },
+    {
+      refetchInterval: 5000,
+    }
   );
 
   if (!matches || matches.length === 0)

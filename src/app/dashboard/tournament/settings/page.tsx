@@ -102,9 +102,44 @@ export default function TournamentSettingsPage() {
       <div className="flex flex-col gap-4 py-10">
         <TeamsDialog tournament={tournament} />
       </div>
+      {tournament.status === "KO_PHASE" && (
+        <CreateNewFinalsButton
+          tournamentId={tournament.id}
+        />
+      )}
       <StartButton status={tournament.status} tournamentId={tournament.id} />
-      <ResetDialog tournamentId={tournament.id} />
+      <div className="flex flex-col gap-4 py-10">
+        <ResetDialog tournamentId={tournament.id} />
+      </div>
     </div>
+  );
+}
+
+function CreateNewFinalsButton({ tournamentId }: { tournamentId: string }) {
+  const utils = api.useUtils();
+
+  const createNewFinals = api.finals.createNewFinalMatch.useMutation({
+    onSuccess: async (res) => {
+      await utils.tournament.invalidate();
+      console.log(res);
+      toast.success("Neue Turnierfinals wurden erstellt.");
+    },
+    onError: (err) => {
+      console.error(err);
+      toast.error("Es gab einen Fehler beim Erstellen der neuen Finals", {
+        description:
+          err.shape?.message ?? err.shape?.code ?? "Unbekannter Fehler",
+      });
+    },
+  });
+
+  return (
+    <Button
+      onClick={() => createNewFinals.mutate({ tournamentId })}
+      disabled={createNewFinals.isPending}
+    >
+      Turnierfinals erstellen (manuell)
+    </Button>
   );
 }
 

@@ -422,7 +422,13 @@ const generateQuarterFinalMatches = async (
     const spiel1 = finals.spiele[i];
     const spiel2 = finals.spiele[i + 1];
 
-    if (!spiel2 || !spiel1?.cupsTeam1 || !spiel1?.cupsTeam2 || !spiel2?.cupsTeam1 || !spiel2?.cupsTeam2) {
+    if (
+      !spiel2 ||
+      spiel1?.cupsTeam1 === null || spiel1?.cupsTeam1 === undefined ||
+      spiel1?.cupsTeam2 === null || spiel1?.cupsTeam2 === undefined ||
+      spiel2?.cupsTeam1 === null || spiel2?.cupsTeam1 === undefined ||
+      spiel2?.cupsTeam2 === null || spiel2?.cupsTeam2 === undefined
+    ) {
       console.warn(
         `Viertelfinale Matcherstellung wird übersprungen`,
       );
